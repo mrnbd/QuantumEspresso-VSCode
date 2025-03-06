@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "Quantum Espresso",
-  "scopeName": "source.qe",
+  "scopeName": "source.espresso",
   "fileTypes": [
     "in",
     "inp",
@@ -13,48 +13,103 @@
   ],
   "patterns": [
     {
-      "include": "#comment"
-    },
-    {
-      "include": "#namelist"
-    },
-    {
-      "include": "#keyword"
-    },
-    {
-      "include": "#option"
-    },
-    {
-      "include": "#card"
-    },
-    {
-      "include": "#floating-point"
-    },
-    {
-      "include": "#decimal"
-    },
-    {
-      "include": "#boolean"
+      "begin": "\\A",
+      "while": "^",
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#namelist"
+        },
+        {
+          "include": "#card"
+        }
+      ]
     }
   ],
   "repository": {
     "comment": {
       "patterns": [
         {
-          "match": "!.*$",
-          "name": "comment.line"
+          "name": "comment",
+          "match": "!.*$"
         }
       ]
     },
     "namelist": {
+      "name": "meta.namelist",
+      "begin": "\\G(?=&[[:alpha:]]+)",
       "patterns": [
         {
-          "name": "keyword.control.namelist",
-          "match": "&(control|system|electrons|ions|cell|fcp|rism|CONTROL|SYSTEM|ELECTRONS|IONS|CELL|FCP|RISM)"
+          "contentName": "meta.namelist.body",
+          "begin": "\\G(&)(?i:([[:alpha:]]+))\\s*$\\n+",
+          "beginCaptures": {
+            "0": {
+              "name": "meta.namelist.head",
+              "patterns": [
+                {
+                  "name": "entity.name.class",
+                  "match": ".*"
+                }
+              ]
+            },
+            "1": {
+              "name": "punctuation.namelist.beginning"
+            },
+            "2": {
+              "name": "meta.namelist.name"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#number"
+            },
+            {
+              "include": "#option"
+            },
+            {
+              "include": "#boolean"
+            },
+            {
+              "include": "#variable"
+            },
+            {
+              "include": "#comment"
+            }
+          ],
+          "end": "^(?=/)"
+        }
+      ],
+      "end": "^(/)\\s*$",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.namelist.ending"
+        }
+      }
+    },
+    "card": {
+      "patterns": [
+        {
+          "begin": "\\G(ATOMIC_SPECIES|ATOMIC_POSITIONS|K_POINTS|CELL_PARAMETERS|CONSTRAINTS|OCCUPATIONS)",
+          "beginCaptures": {
+            "0": {
+              "name": "keyword.control.card"              
+            }
+          },
+          "while": "^(?!\\n)",
+          "patterns": [
+            {
+              "include": "#number"
+            },
+            {
+              "include": "#option"
+            }
+          ]
         }
       ]
     },
-    "keyword": {
+    "variable": {
       "patterns": [
         {
           "name": "keyword.control",
@@ -134,62 +189,45 @@
     "option": {
       "patterns": [
         {
-          "name": "string.logical.option",
-          "patterns": [
-            {
-              "name": "keyword.logical.option",
-              "match": "\\b(true|TRUE|false|FALSE)\\b"
-            }
-          ]
-        },
-        {
           "name": "string.quoted.option",
           "begin": "\"|'",
           "end": "\"|'",
           "patterns": [
             {
               "name": "keyword.control.calculation.option",
-              "match": "\\b(scf|nscf|bands|relax|md|vc-relax|vc-md)\\b"
+              "match": "\\G\\b(scf|nscf|bands|relax|md|vc-relax|vc-md)\\b"
             },
             {
               "name": "keyword.control.verbosity.option",
-              "match": "\\b(high|low)\\b"
+              "match": "\\G\\b(high|low)\\b"
             },
             {
               "name": "keyword.control.restart_mode.option",
-              "match": "\\b(from_scratch|restart)\\b"
+              "match": "\\G\\b(from_scratch|restart)\\b"
             },
             {
               "name": "keyword.control.prefix.option",
-              "match": "\\b(pwscf)\\b"
+              "match": "\\G\\b(pwscf)\\b"
             },
             {
               "name": "keyword.control.disk_io.option",
-              "match": "\\b(high|medium|low|nowf|none)\\b"
-            },
-            {
-              "name": "keyword.system.ibrav.option",
-              "match": "\\b(0|1|2|3|-3|4|5|-5|6|7|8|9|-9|91|10|11|12|-12|13|-13|14)\\b"
+              "match": "\\G\\b(high|medium|low|nowf|none)\\b"
             },
             {
               "name": "keyword.system.occupations.option",
-              "match": "\\b(smearing|tetrahedra|tetrahedra_lin|tetrahedra_opt|fixed|from_input)\\b"
+              "match": "\\G\\b(smearing|tetrahedra|tetrahedra_lin|tetrahedra_opt|fixed|from_input)\\b"
             },
             {
               "name": "keyword.system.smearing.option",
-              "match": "\\b(gaussian|gauss|methfessel-paxton|m-p|mp|marzari-vanderbilt|cold|m-v|mv|fermi-dirac|f-d|fd)\\b"
+              "match": "\\G\\b(gaussian|gauss|methfessel-paxton|m-p|mp|marzari-vanderbilt|cold|m-v|mv|fermi-dirac|f-d|fd)\\b"
             },
             {
               "name": "keyword.system.nspin.option",
-              "match": "\\b(1|2|4)\\b"
+              "match": "\\G\\b(1|2|4)\\b"
             },
             {
               "name": "keyword.system.exxdiv_treatment.option",
-              "match": "\\b(gygi-baldereschi|vcut_spherical|vcut_ws|none)\\b"
-            },
-            {
-              "name": "keyword..option",
-              "match": "\\b()\\b"
+              "match": "\\G\\b(gygi-baldereschi|vcut_spherical|vcut_ws|none)\\b"
             }
           ]
         },
@@ -197,8 +235,8 @@
           "name": "string.nonquoted.option",
           "patterns": [
             {
-              "name": "keyword.logical.option",
-              "match": "\\b(.true.|.TRUE.|.false.|.FALSE.)\\b"
+              "name": "keyword.system.ibrav.option",
+              "match": "\\b(0|1|2|3|-3|4|5|-5|6|7|8|9|-9|91|10|11|12|-12|13|-13|14)\\b"
             },
             {
               "name": "keyword.atomic_positions.option",
@@ -224,24 +262,12 @@
         }
       ]
     },
-    "card": {
-      "patterns": [
-        {
-          "name": "keyword.control.card",
-          "match": "\\b(ATOMIC_SPECIES|ATOMIC_POSITIONS|K_POINTS|CELL_PARAMETERS|CONSTRAINTS|OCCUPATIONS)\\b"
-        }
-      ]
-    },
-    "floating-point": {
+    "number": {
       "patterns": [
         {
           "name": "constant.numeric.float",
           "match": "\\b([0-9]+[Ee][-]?[0-9]+|([0-9]*\\.[0-9]+|[0-9]+\\.)([Ee][-]?[0-9]+)?)[fFlL]?\\b"
-        }
-      ]
-    },
-    "decimal": {
-      "patterns": [
+        },
         {
           "name": "constant.numeric.decimal",
           "match": "\\b([1-9][0-9]*|0)([Uu]([Ll]|LL|ll)?|([Ll]|LL|ll)[Uu]?)?\\b"
@@ -249,54 +275,27 @@
       ]
     },
     "boolean": {
+      "name": "string.unquoted",
       "patterns": [
         {
-          "name": "string.quoted.boolean",
-          "patterns": [
-            {
-              "name": "constant.language.boolean.true",
-              "match": "\\b(.true.|.TRUE.)\\b",
-              "captures": {
-                "0": {
-                  "name": "constant.language.boolean.true"
-                }
-              }
-            },
-            {
-              "name": "constant.language.boolean.false",
-              "match": "\\b(.false.|.FALSE.)\\b",
-              "captures": {
-                "0": {
-                  "name": "constant.language.boolean.false"
-                }
-              }
+          "name": "constant.language.boolean.true",
+          "match": "(?<=\\s|=|^)\\.(?i:true)\\.(?=\\s|,|$)",
+          "captures": {
+            "0": {
+              "name": "constant.language.boolean.true"
             }
-          ]
+          }
+        },
+        {
+          "name": "constant.language.boolean.false",
+          "match": "(?<=\\s|=|^)\\.(?i:false)\\.(?=\\s|,|$)",
+          "captures": {
+            "0": {
+              "name": "constant.language.boolean.false"
+            }
+          }
         }
       ]
-    }
-  },
-  "semanticClassifications": {
-    "comment": {
-      "type": "comment"
-    },
-    "namelist": {
-      "type": "preprocessor"
-    },
-    "keyword": {
-      "type": "keyword"
-    },
-    "option": {
-      "type": "type"
-    },
-    "card": {
-      "type": "identifier"
-    },
-    "number": {
-      "type": "number"
-    },
-    "boolean": {
-      "type": "boolean"
     }
   }
 }

@@ -51,7 +51,7 @@
     "grammars": [
       {
         "language": "quantumespresso",
-        "scopeName": "source.qe",
+        "scopeName": "source.espresso",
         "path": "./syntaxes/quantumespresso.tmLanguage.json"
       }
     ]
